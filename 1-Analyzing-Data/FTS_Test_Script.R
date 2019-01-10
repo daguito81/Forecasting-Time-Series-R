@@ -190,5 +190,8 @@ main_script <- function(series){
   return(results)
 }
 
-
+#Uncomment this for several series
 #final_results <- main_script(series)
+
+#Uncomment this for 1 series
+checkFTS(series1, log_trf=TRUE)
