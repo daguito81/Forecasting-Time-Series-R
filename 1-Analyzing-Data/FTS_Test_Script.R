@@ -1,7 +1,7 @@
 library(fBasics)
 library(forecast)
 
-
+#### READ DATA ####
 data <- read.csv("Sessions2&3sim.csv", header = T, sep=';', dec = ',')
 
 #For Simulated Data
