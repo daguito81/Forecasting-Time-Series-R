@@ -44,10 +44,10 @@ checkStationary <- function(y, log_trf=FALSE) {
     degrees <<- d
     print("Series is not Stationary, Transforming")
     if(log_trf == F){
-      z<-diff(y,d)
+      z<-diff(y, diff=d)
     } else {
       print("Log tranformation is ON")
-      z <- diff(log(y),d)
+      z <- diff(log(y), diff=d)
     }
     if (ndiffs(z, alpha=0.05, test=c("adf")) == 0){
       print(paste("Transformed ", d, " level" ))
