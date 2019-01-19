@@ -2,22 +2,22 @@ library(fBasics)
 library(forecast)
 
 
-data <- read.csv("Sessions2&3real.csv", header = T, sep=';', dec = ',')
+data <- read.csv("Sessions2&3sim.csv", header = T, sep=';', dec = ',')
 
 #For Simulated Data
-# Uncomment this if the main_script will be used
-# series1 <- data[,1][1:200]
-# series2 <- data[,2][1:200]
-# series3 <- data[,3][1:200]
-# series4 <- data[,4][1:200]
-# series5 <- data[,5][1:200]
-# series6 <- data[,6]
-# series <- list(series1, series2, series3, series4, series5, series6)
-# names(series) <- c('series1', 'series2', 'series3', 'series4', 'series5', 'series6')
+#Uncomment this if the main_script will be used
+series1 <- data[,1][1:200]
+series2 <- data[,2][1:200]
+series3 <- data[,3][1:200]
+series4 <- data[,4][1:200]
+series5 <- data[,5][1:200]
+series6 <- data[,6]
+series <- list(series1, series2, series3, series4, series5, series6)
+names(series) <- c('series1', 'series2', 'series3', 'series4', 'series5', 'series6')
 
 #For Real Data
 #Uncomment this if a single series is going to be used 
-series1 <- data[,1]
+# series1 <- data[,1]
 
 
 
@@ -99,7 +99,14 @@ checkNormality <- function(y){
 checkWhiteNoise <- function(y){
   box <- Box.test(y, lag = 20, type="Ljung")
   print(paste("Box Test (p-value): ", box$p.value))
-  if (box$p.value > 0.05){
+  #Hyp Testing for Mean = 0
+  z <- (mean(y) - 0) / ( sd(y) / sqrt(length(y)))
+  alpha <- 0.05
+  z.half.alpha <- qnorm(1-alpha/2)
+  print(paste("Z-Statistic: ", z))
+  
+  
+  if (box$p.value > 0.05 && z > -z.half.alpha && z < z.half.alpha){
     WN <<- T
     print("The Series is White Noise")
   } else {
@@ -115,11 +122,15 @@ checkWhiteNoise <- function(y){
     print("The Series is NOT Gaussian White Noise")
   }
   #Testing for Strict White Noise
-  if (GWN == T){
+  if (WN == F){
+    SWN <<- F
+    print("Series is Not Strict White Noise")
+  } else if (WN == T && GWN == T){
     SWN <<- T
     print("Series is Strict White Noise")
-  } else {
+  } else if (WN == T && GWN == F){
     a <- Box.test(y^2,lag=20, type="Ljung")
+    print(paste("Box-y^2 Test (p-value): ", a$p.value))
     if (a$p.value > 0.05){
       SWN <<- T
       print("Series is Strict White Noise")
@@ -127,29 +138,37 @@ checkWhiteNoise <- function(y){
     else {
       SWN <<- F
       print("Series is NOT Strict White Noise")
+    
     }
   }
 }
+
+
+
 
 #### Check Models / Transformations ####
 # USe this function to check if a Linear or non-linear model is needed
 # or if a transformation was needed to make the series stationary
 checkModelsTransf <- function(y){
-  #Linear Model
-  if(WN == T){
+  #Linear / Non-Linear Models
+  if(WN == T && SWN == T){
     LM <<- F
-    print("Linear Model is not needed")
-  } else {
-    LM <<- T
-    print("Linear Model is needed")
-  }
-  if(SWN == T){
     nLM <<- F
-    print("non-Linear Model is not needed")
-  } else {
+    print("Linear Model is not needed")
+    print("Non-Linear Model is not needed")
+  } else if (WN == F && SWN == F){
+    LM <<- T
+    nLM <<- NA
+    print("Linear Model is needed")
+    print("Don't Know if non-Linear Model is needed")
+  } else if (WN == T && SWN == F){
+    LM <<- F
     nLM <<- T
-    print("non-Linear Model is needed")
+    print("Linear Model is not needed")
+    print("Non-Linear Model is needed")
   }
+  
+  # Transformations
   if (stationary == T){
     print("No Transformation Needed")
     trf <<- F
@@ -191,7 +210,7 @@ main_script <- function(series){
 }
 
 #Uncomment this for several series
-#final_results <- main_script(series)
+final_results <- main_script(series)
 
 #Uncomment this for 1 series
-checkFTS(series1, log_trf=TRUE)
+#checkFTS(series6, log_trf=FALSE)
